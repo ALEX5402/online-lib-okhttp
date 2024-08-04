@@ -26,9 +26,12 @@ class Startup {
 
 
     fun StartLoading(context : Context) {
-        val linkk = AlexEnc.encryptString("https://raw.githubusercontent.com/Mama7818181/lib-online/main/update.json")
 
-        Log.i("ALEX", "PassString : ${linkk.first} , key : ${linkk.second}")
+
+//        val linkk = AlexEnc.encryptString("https://raw.githubusercontent.com/Mama7818181/lib-online/main/update.json")
+//        Log.i("ALEX", "PassString : ${linkk.first} , key : ${linkk.second}")
+//
+
         val scope = CoroutineScope(Dispatchers.Main)
 
         runBlocking {
