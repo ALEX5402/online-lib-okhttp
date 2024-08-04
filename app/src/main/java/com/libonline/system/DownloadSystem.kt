@@ -2,17 +2,17 @@ package com.libonline.system
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.http.HttpException
+import android.util.Log
 import android.widget.Toast
 import com.libonline.module.Database
-import com.squareup.moshi.Moshi
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -22,69 +22,61 @@ import java.util.zip.ZipException
 
 object DownloadSystem  {
 
-    suspend fun FetchDatabase(url : String) : Database {
-        val clint = OkHttpClient()
-        return try {
-            withContext(Dispatchers.IO) {
-                val request = Request.Builder()
-                    .url(url)
-                    .build()
-                val response = clint.newCall(request).execute()
+    fun fetchData(url: String): Database? {
+        val okhttpclint: OkHttpClient = OkHttpClient()
+         var jsonobject : JSONObject? = null
 
-                if (response.isSuccessful) {
-                    if (response.body!= null) {
-                        val moshi = Moshi.Builder().build()
-                        val adapter = moshi.adapter(Database::class.java)
-                        return@withContext response.body?.string()?.let {
-                            adapter.fromJson(it)
-                        }!!
-                    } else{
-                        Database(
-                            serverStatus = "No data available",
-                            noticeMode = "No data available",
-                            dataClearMode = "No data available",
-                            serverMessage = "No data available",
-                            openTime = "No data available",
-                            libs = "No data available",
-                            noticeTitle = "No data available",
-                            noticeBody = "No data available"
-                        )
-                    }
-                } else {
-                    Database(
-                        serverStatus = "No data available",
-                        noticeMode = "No data available",
-                        dataClearMode = "No data available",
-                        serverMessage = "No data available",
-                        openTime = "No data available",
-                        libs = "No data available",
-                        noticeTitle = "No data available",
-                        noticeBody = "No data available"
-                    )
-                }
+        if (url == "")
+            return null
+
+        return try {
+            val request = Request.Builder()
+                .url(url)
+                .build()
+            okhttpclint.newCall(request).execute().use { responce ->
+                if (!responce.isSuccessful)
+                    return@use
+                if (responce.body == null)
+                    return@use
+                val jsonString = responce.body?.string()
+//                Log.d("TAG", "fetchData: $jsonString")
+                jsonobject = JSONObject(jsonString)
+
             }
-        } catch(@SuppressLint("NewApi") error :HttpException) {
+
+            jsonobject?.let { responce ->
+//                Log.e("TAG",responce!!.getString("libs"))
+                Database(
+                    serverStatus = responce.getString("serverstatus"),
+                    noticeMode = responce.getString("noticemode"),
+                    dataClearMode = responce.getString("dataclearmode"),
+                    serverMessage = responce.getString("servermeassage"),
+                    openTime = responce.getString("opentime"),
+                    libs = responce.getString("libs"),
+                    noticeTitle = responce.getString("notice_title"),
+                    noticeBody = responce.getString("notice_body")
+                )
+            }
+        } catch ( error: Exception) {
             error.printStackTrace()
-           Database(
-               serverStatus = "Something went wrong",
-               noticeMode = "Something went wrong",
-               dataClearMode = "Something went wrong",
-               serverMessage = "Something went wrong",
-               openTime = "Something went wrong",
-               libs = "Something went wrong",
-               noticeTitle = "Something went wrong",
-               noticeBody = "Something went wrong"
-           )
+            Database(
+                serverStatus = "Failed",
+                noticeMode = "Failed",
+                dataClearMode = "Failed",
+                serverMessage = "Failed",
+                openTime = "Failed",
+                libs = "Failed",
+                noticeTitle = "Failed",
+                noticeBody = "Failed"
+            )
         }
+
     }
 
 
-
     fun downloadZipfile (downloadlin : String,
-                         isdownloadsucess : (String) -> Unit,
-                         isdownloadfailed : (String) -> Unit,
-                         isdownloadprogress : (Int) -> Unit,
-                         downloadedfilepath : (String) -> Unit)
+                         isdownloadsucess : (filepath : String) -> Unit,
+                         isdownloadfailed : (String) -> Unit)
     {
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
@@ -100,16 +92,12 @@ object DownloadSystem  {
                         val dataBuffer = ByteArray(1024)
                         var bytesRead: Int
                         while (inputStream.read(dataBuffer, 0, 1024).also { bytesRead = it } != -1) {
-                            outputStream.write(dataBuffer, 0, bytesRead)
-                            val calculatedProgress = outputStream.channel.position() / outputfile.length().toFloat() * 100
-                            isdownloadprogress(calculatedProgress.toInt())
-                        }
+                            outputStream.write(dataBuffer, 0, bytesRead) }
                     }
                     outputfile.setExecutable(true)
                     outputfile.setReadable(true)
                     outputfile.setWritable(true)
-                    isdownloadsucess("Download successful")
-                    downloadedfilepath(outputfile.absoluteFile.toString())
+                    isdownloadsucess(outputfile.absoluteFile.toString())
                 }
 
             } catch (err : Exception)
@@ -153,6 +141,7 @@ object DownloadSystem  {
 
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     fun loadlib(context: Context) {
+        val scope = CoroutineScope(Dispatchers.Main)
         val files = context.cacheDir.listFiles()
         try {
             if (files != null) {
@@ -171,7 +160,9 @@ object DownloadSystem  {
                     }
                 }
             }
-            Toast.makeText(context, "LIB Load Done ", Toast.LENGTH_LONG).show()
+            scope.launch {
+                Toast.makeText(context, "LIB Load Started ", Toast.LENGTH_LONG).show()
+            }
         } catch (err: Exception) {
             if (files != null) {
                 for (file in files) {

@@ -37,43 +37,52 @@ object AlexEnc {
     @SuppressLint("GetInstance")
     @TargetApi(Build.VERSION_CODES.O)
     fun encryptString(input: String): Pair<String, String> {
-        // Generate a secret key
-        val keyGenerator = KeyGenerator.getInstance("AES")
-        keyGenerator.init(128)
-        val secretKey: SecretKey = keyGenerator.generateKey()
+       return try {
+           val keyGenerator = KeyGenerator.getInstance("AES")
+           keyGenerator.init(128)
+           val secretKey: SecretKey = keyGenerator.generateKey()
 
-        // Create a Cipher object and initialize it with the secret key
-        val cipher = Cipher.getInstance("AES")
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+           // Create a Cipher object and initialize it with the secret key
+           val cipher = Cipher.getInstance("AES")
+           cipher.init(Cipher.ENCRYPT_MODE, secretKey)
 
-        // Encrypt the input string
-        val encryptedBytes: ByteArray = cipher.doFinal(input.toByteArray())
-        val encryptedString: String = Base64.getEncoder().encodeToString(encryptedBytes)
+           // Encrypt the input string
+           val encryptedBytes: ByteArray = cipher.doFinal(input.toByteArray())
+           val encryptedString: String = Base64.getEncoder().encodeToString(encryptedBytes)
 
-        // Convert the secret key to a string
-        val keyString: String = Base64.getEncoder().encodeToString(secretKey.encoded)
+           // Convert the secret key to a string
+           val keyString: String = Base64.getEncoder().encodeToString(secretKey.encoded)
 
-        // Return the encrypted string and the key
-        return Pair(encryptedString, keyString)
+           // Return the encrypted string and the key
+           Pair(encryptedString, keyString)
+        }catch (err : Exception){
+            err.printStackTrace()
+           Pair("", "")
+        }
     }
 
     @SuppressLint("GetInstance")
     @TargetApi(Build.VERSION_CODES.O)
     fun decryptString(passString: String, key: String): String {
-        // Decode the key from Base64
-        val decodedKey: ByteArray = Base64.getDecoder().decode(key)
-        val secretKey: SecretKey = SecretKeySpec(decodedKey, "AES")
+        return try {
+            // Decode the key from Base64
+            val decodedKey: ByteArray = Base64.getDecoder().decode(key)
+            val secretKey: SecretKey = SecretKeySpec(decodedKey, "AES")
 
-        // Create a Cipher object and initialize it with the secret key
-        val cipher = Cipher.getInstance("AES")
-        cipher.init(Cipher.DECRYPT_MODE, secretKey)
+            // Create a Cipher object and initialize it with the secret key
+            val cipher = Cipher.getInstance("AES")
+            cipher.init(Cipher.DECRYPT_MODE, secretKey)
 
-        // Decrypt the encrypted string
-        val encryptedBytes: ByteArray = Base64.getDecoder().decode(passString)
-        val decryptedBytes: ByteArray = cipher.doFinal(encryptedBytes)
-        val decryptedString: String = String(decryptedBytes)
+            // Decrypt the encrypted string
+            val encryptedBytes: ByteArray = Base64.getDecoder().decode(passString)
+            val decryptedBytes: ByteArray = cipher.doFinal(encryptedBytes)
+            val decryptedString: String = String(decryptedBytes)
 
-        // Return the decrypted string
-        return decryptedString
+            // Return the decrypted string
+            decryptedString
+        }catch (err : Exception){
+            err.printStackTrace()
+            ""
+        }
     }
 }
