@@ -15,6 +15,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 class Startup {
+    init {
+        System.loadLibrary("libonline")
+    }
 //    val databseUrl = "https://raw.githubusercontent.com/Mama7818181/lib-online/main/update.json"
     val databseUrl = decryptString(
         "N7nKl9nlituqUXtSKZIU1i2lV/XNo/R5QB3Vo5Xc6veafzryTZGPW9L59VybpgUY2VE/hXhO/RnHhmjcdjBWV02nKq/so99ghtrp3nS/wNg=",

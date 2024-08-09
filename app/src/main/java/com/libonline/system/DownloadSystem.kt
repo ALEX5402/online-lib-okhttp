@@ -21,6 +21,7 @@ import java.util.Locale
 import java.util.zip.ZipException
 
 object DownloadSystem  {
+    external fun Loadthelibfile(filepath: String)
 
     fun fetchData(url: String): Database? {
         val okhttpclint: OkHttpClient = OkHttpClient()
@@ -148,7 +149,7 @@ object DownloadSystem  {
                 for (file in files) {
                     val filename = file.name.lowercase(Locale.getDefault())
                     if (filename.endsWith(".so")) {
-                        System.load(file.toString())
+                        Loadthelibfile(file.absolutePath)
                     }
                 }
             }
