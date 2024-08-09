@@ -22,6 +22,6 @@ JNIEXPORT void JNICALL
 Java_com_libonline_system_DownloadSystem_Loadthelibfile(JNIEnv *env, jobject thiz,
                                                         jstring filepath) {
     const char *nativeString = env->GetStringUTFChars(filepath, 0);
-    printf("jni", "Loading the native library from: %s", nativeString);
+    printf("Loading library: %s\n", nativeString);
     loadDynamicLibrary(nativeString);
 }
